@@ -871,13 +871,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballsInPattern: 3
+  patternSpeed: 1.6666666
   basicVector: {x: 0, y: 4.5, z: 0.75}
   basicInitialDelay: 1.8
   basicPatternTime: 1.44
-  basicRotZSpeed: -30
   basicRotYSpeed: -30
-  basicROT_Z_TIME: 0.7
+  basicRotZSpeed: -30
   basicROT_Y_TIME: 0.7
+  basicROT_Z_TIME: 0.7
   timeScale: 0.5
   balls:
   - {fileID: 420369933}
