@@ -91,7 +91,7 @@ public class HandlingBall : MonoBehaviour
             ballNum++;
             ball = balls[ballNum];
             ballRb = ball.GetComponent<Rigidbody>();
-            print("ten numer pily tera: " + ball.name);
+            print("Now: " + ball.name);
         }
         else
         {

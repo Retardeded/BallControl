@@ -4,23 +4,12 @@ using UnityEngine;
 
 public class RotationPattern : MonoBehaviour
 {
-    // 3 ball
-    // rotZSpeed -30, ROT_Z_TIME = 0.7
-    // rotYSpeed -30, ROT_Y_TIME = 0.7
-    //
-
-    // rotZSpeed -45, ROT_Z_TIME = 0.525
-    // rotYSpeed -45, ROT_Y_TIME = 0.525
-    // 
 
 
     [SerializeField] HandlingBall hand;
     public bool leftSide;
     public bool throwMode = true;
-    float cosScale = 4f;
 
-    //[SerializeField] float rotZMax = 10f;
-    //[SerializeField] float rotZMin = 340f;
     public float rotZSpeed = 30f;
     public float ROT_Z_TIME = 2f;
     float zTime;
@@ -46,7 +35,6 @@ public class RotationPattern : MonoBehaviour
 
         zTime = ROT_Z_TIME/2;
         yTime = ROT_Y_TIME;
-        cosScale /= yTime;
 
         if (leftSide)
             StartCoroutine(hand.BallRelease(hand.initialDelay));
@@ -63,7 +51,7 @@ public class RotationPattern : MonoBehaviour
             PatternReset();
             zRotation();
             yRotation();
-            rb.transform.Rotate(0f, rotYSpeed * Time.fixedDeltaTime * Mathf.Cos(yTime*cosScale), rotZSpeed * Time.fixedDeltaTime * Mathf.Cos(zTime*cosScale));
+            rb.transform.Rotate(0f, rotYSpeed * Time.fixedDeltaTime * Mathf.Cos(yTime* PatternManager.COS_SCALE), rotZSpeed * Time.fixedDeltaTime * Mathf.Cos(zTime * PatternManager.COS_SCALE));
         }
 
     }
