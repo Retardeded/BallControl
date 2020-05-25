@@ -2,16 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+// speed 0.92* 0.96 1.02 1.07 1.12 1.193 1.25825 1.3165 1.4333 1.5498 1.645 1.76 1.94 2.15 2.4 stabilne
+
+// sprawdzic jak bardzo stabilne w "granicach" konkretnych przedzialow
+
 public class PatternManager : MonoBehaviour
 {
-    [SerializeField] float cosScale = 4f;
+    [SerializeField] float cosScale = 0.1f;
     public static float COS_SCALE;
 
     public int ballsInPattern = 3;
     [SerializeField] float patternSpeed = 5f / 3f;
     float fixedPatternSpeed;
 
-    // basicVector = new Vector3(0f, 4.5f, 0.75f);
+    // basicVector = new Vector3(0f, 4.9f, 0.65f);
+    // basicInitialDelay  = 1.8f;
+    // basicPatternTime  = 1.41f;
     [SerializeField] Vector3 basicVector = new Vector3(0f, 4.5f, 0.75f);
     [SerializeField] float basicInitialDelay = 1.8f;
     [SerializeField] float basicPatternTime = 1.44f;
@@ -59,10 +66,12 @@ public class PatternManager : MonoBehaviour
         basicROT_Y_TIME /= fixedPatternSpeed;
         basicROT_Z_TIME /= fixedPatternSpeed;
 
+        // dotąd legit wszystko
+
         basicInitialDelay /= fixedPatternSpeed;
         basicPatternTime /= fixedPatternSpeed;
 
-        cosScale /= basicROT_Y_TIME;
+        cosScale = (cosScale / basicROT_Y_TIME); //* Mathf.Abs(basicRotYSpeed);
         COS_SCALE = cosScale;
     }
 
@@ -75,7 +84,7 @@ public class PatternManager : MonoBehaviour
         float desiredT = t / patternSpeed * ballsInPattern / 3.0f;
         print(desiredT);
         float desiredS = Physics.gravity.y * Mathf.Pow(desiredT, 2f) / 2;
-        print(desiredS);
+        print("Wysokosc: " + desiredS);
         yVector = Mathf.Abs((desiredS + (Physics.gravity.y / 2) * Mathf.Pow(desiredT, 2f)) / desiredT);
         print(yVector);
         zVector = basicVector.z * t / desiredT;

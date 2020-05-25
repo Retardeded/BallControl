@@ -15,16 +15,13 @@ public class HandlingBall : MonoBehaviour
 
     public List<GameObject> balls = new List<GameObject>();
     [SerializeField] GameObject ball;
-    Rigidbody rb;
     Rigidbody ballRb;
-    [SerializeField] float ballSpeedMult = 5f;
     public Vector3 properVector;
-
     public Vector3 ballVelocity;
-    public Vector3 palmVelocity;
-
     public Vector3 previousPos;
-
+    //1.819422 0.3812808 -0.1167499/0.3608411
+    public Vector3 basicPos;
+    public float smallEnoughError = 0.1f;
 
     public float initialDelay = 2f;
     public float patternTime = 1f;
@@ -38,19 +35,10 @@ public class HandlingBall : MonoBehaviour
 
         if (obj.gameObject != ball && obj.gameObject.tag == "Ball")
         {
-            if(handMode)
-            {
-                //ballRb.velocity = properVector;
-
-                //print(ball.name);
-                //print(ballRb.velocity);
-            }
-
             ball = obj.gameObject;
             ballRb = ball.GetComponent<Rigidbody>();
             ball.transform.position = transform.position;
             handMode = true;
-            //StartCoroutine(BallRelease(patternTime));
         }
     }
 
@@ -58,7 +46,6 @@ public class HandlingBall : MonoBehaviour
     {
         numOfBalls = balls.Count;
         ball = balls[ballNum];
-        rb = GetComponent<Rigidbody>();
         ballRb = ball.GetComponent<Rigidbody>();
         ball.transform.position = transform.position;
     }
@@ -67,26 +54,29 @@ public class HandlingBall : MonoBehaviour
     void Update()
     {   
         ballVelocity = ballRb.velocity;
-        palmVelocity = rb.velocity;
 
         if(handMode)
+        {
             ball.transform.position = transform.position;
+        }
     }
 
     public IEnumerator BallRelease(float time)
     {
         yield return new WaitForSeconds(time);
-        previousPos = transform.position;
-        //yield return new WaitForSeconds(patternTime / 20f);
-        //yield return new WaitForSeconds(patternTime / (1.0f / Time.deltaTime));
-        //yield return new WaitForSeconds(patternTime / 20);
-        //ballRb.velocity = (transform.position - previousPos).normalized * ballSpeedMult;
+        if (basicPos == Vector3.zero)
+            basicPos = ball.transform.position;
+        else
+            previousPos = ball.transform.position;
+        Relase();
+    }
+
+    private void Relase()
+    {
+        float scale = ball.transform.position.y - basicPos.y;
         ballRb.velocity = properVector;
 
-        print(ball.name);
-        print(ballRb.velocity);
-
-        if (balls.Count-1 > ballNum)
+        if (balls.Count - 1 > ballNum)
         {
             ballNum++;
             ball = balls[ballNum];
@@ -98,6 +88,6 @@ public class HandlingBall : MonoBehaviour
             handMode = false;
         }
 
-        StartCoroutine(BallRelease(patternTime));
+        StartCoroutine(BallRelease(patternTime / (1+scale) ));
     }
 }

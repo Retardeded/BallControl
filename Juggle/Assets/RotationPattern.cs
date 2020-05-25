@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class RotationPattern : MonoBehaviour
 {
 
-
+    [SerializeField] Transform yVec;
+    [SerializeField] Transform zVec;
     [SerializeField] HandlingBall hand;
     public bool leftSide;
     public bool throwMode = true;
@@ -26,6 +28,14 @@ public class RotationPattern : MonoBehaviour
     float PATTERN_TIME;
     float patternTime;
 
+    private float fixedDeltaTime;
+    int counter = 0;
+
+    private void Awake()
+    {
+        this.fixedDeltaTime = Time.fixedDeltaTime;
+    }
+
     void Start()
     {
         PATTERN_TIME = ROT_Y_TIME * 2;
@@ -45,13 +55,16 @@ public class RotationPattern : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        Time.fixedDeltaTime = this.fixedDeltaTime * Time.timeScale;
+
         yROT = rb.transform.eulerAngles.y;
         if (throwMode)
         {
             PatternReset();
-            zRotation();
-            yRotation();
-            rb.transform.Rotate(0f, rotYSpeed * Time.fixedDeltaTime * Mathf.Cos(yTime* PatternManager.COS_SCALE), rotZSpeed * Time.fixedDeltaTime * Mathf.Cos(zTime * PatternManager.COS_SCALE));
+            TimeRotation();
+            yVec.Rotate(0f,rotYSpeed * Time.fixedDeltaTime * Mathf.Cos(yTime * PatternManager.COS_SCALE),0f);
+            zVec.Rotate(0f, 0f, rotZSpeed * Time.fixedDeltaTime * Mathf.Cos(zTime * PatternManager.COS_SCALE));
+            transform.rotation = Quaternion.Euler(0f, yVec.rotation.y*100, zVec.rotation.z*100);
         }
 
     }
@@ -62,28 +75,27 @@ public class RotationPattern : MonoBehaviour
         if(patternTime < 0f)
         {
             patternTime = PATTERN_TIME;
-            transform.rotation = basicRotation;
+            //transform.rotation = Quaternion.Slerp(transform.rotation, basicRotation, Time.fixedDeltaTime * 5f);
+            if (transform.rotation == Quaternion.identity)
+                print("Reset");
+            transform.rotation = Quaternion.Euler(0, transform.rotation.y, transform.rotation.z);
         }
     }
 
-    private void yRotation()
+    private void TimeRotation()
     {
+        zTime -= Time.fixedDeltaTime;
+        yTime -= Time.fixedDeltaTime;
         if (yTime < 0f)
         {
             rotYSpeed *= -1;
             yTime = ROT_Y_TIME;
         }
-        yTime -= Time.fixedDeltaTime;
-    }
-
-    private void zRotation()
-    {
         if (zTime < 0f)
         {
             rotZSpeed *= -1;
             zTime = ROT_Z_TIME;
         }
-        zTime -= Time.fixedDeltaTime;
     }
 
     public IEnumerator SetUpTiming()
