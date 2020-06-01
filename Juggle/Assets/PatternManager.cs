@@ -9,7 +9,13 @@ using UnityEngine;
 
 public class PatternManager : MonoBehaviour
 {
+    float correctCycle = 2.5f;
+    float handPosDiff = 0.65f;
+    float handRange = 0.11f;
+
+    [SerializeField] string patternType;
     [SerializeField] float cosScale = 0.1f;
+    [SerializeField] float offset = 0.05f;
     public static float COS_SCALE;
 
     public int ballsInPattern = 3;
@@ -19,9 +25,14 @@ public class PatternManager : MonoBehaviour
     // basicVector = new Vector3(0f, 4.9f, 0.65f);
     // basicInitialDelay  = 1.8f;
     // basicPatternTime  = 1.41f;
-    [SerializeField] Vector3 basicVector = new Vector3(0f, 4.5f, 0.75f);
-    [SerializeField] float basicInitialDelay = 1.8f;
-    [SerializeField] float basicPatternTime = 1.44f;
+    //[SerializeField] Vector3 basicVector = new Vector3(0f, 3.4335f, 0.9285f);
+    [SerializeField] Vector3 basicVector;
+    [SerializeField] Vector3 basicAsyncVector = new Vector3(0f, 6.867f, 0.4642857f);
+    [SerializeField] Vector3 basicSyncVector = new Vector3(0f, 5.15025f, -(0.11f / 1.05f));
+    [SerializeField] float maxErrorX = 0.05f;
+    [SerializeField] float maxErrorY = 0.05f;
+    [SerializeField] float basicHandTime = 0.7f;
+    [SerializeField] float basicAirTime = 0.7f;
 
     [SerializeField] float basicRotYSpeed = -30f;
     [SerializeField] float basicRotZSpeed = -30f;
@@ -41,16 +52,14 @@ public class PatternManager : MonoBehaviour
 
     private void Awake()
     {
-        //basicInitialDelay /= ballsInPattern / 3.0f;
-        //basicPatternTime /= ballsInPattern / 3.0f;
-        //basicVector = new Vector3(basicVector.x, basicVector.y * (ballsInPattern/3.0f),basicVector.z * (3.0f / ballsInPattern) );
-
-        fixedPatternSpeed = patternSpeed * ballsInPattern / 3.0f;
+        if (ballsInPattern % 2 == 0)
+            basicVector = basicSyncVector;
+        else
+            basicVector = basicAsyncVector;
 
         float yVector, zVector;
         CalculateCorrectSpeed(out yVector, out zVector);
         SetCorrectSpeed(yVector, zVector);
-
         SetPatternRotation();
         SetUpPatternStats();
         DistributeBalls();
@@ -58,18 +67,24 @@ public class PatternManager : MonoBehaviour
 
     private void SetCorrectSpeed(float yVector, float zVector)
     {
+        float ballMaths;
+
+        if (ballsInPattern % 2 == 1)
+            ballMaths = (ballsInPattern-1) / 2;
+        else
+            ballMaths = (ballsInPattern-1f) / 3f;
+
+
         basicVector = new Vector3(basicVector.x, yVector, zVector);
 
-        basicRotYSpeed *= fixedPatternSpeed;
-        basicRotZSpeed *= fixedPatternSpeed;
+        basicRotYSpeed *= patternSpeed * ballMaths;
+        basicRotZSpeed *= patternSpeed * ballMaths;
 
-        basicROT_Y_TIME /= fixedPatternSpeed;
-        basicROT_Z_TIME /= fixedPatternSpeed;
+        basicROT_Y_TIME /= (patternSpeed * ballMaths);
+        basicROT_Z_TIME /= (patternSpeed * ballMaths);
 
-        // dotąd legit wszystko
-
-        basicInitialDelay /= fixedPatternSpeed;
-        basicPatternTime /= fixedPatternSpeed;
+        basicHandTime /= (patternSpeed * ballMaths);
+        basicAirTime /= (patternSpeed * ballMaths);
 
         cosScale = (cosScale / basicROT_Y_TIME); //* Mathf.Abs(basicRotYSpeed);
         COS_SCALE = cosScale;
@@ -77,18 +92,13 @@ public class PatternManager : MonoBehaviour
 
     private void CalculateCorrectSpeed(out float yVector, out float zVector)
     {
-        float s = (basicVector.y / 2) * (basicVector.y / Physics.gravity.y);
-        print(s);
-        float t = Mathf.Sqrt(2 * s / Physics.gravity.y);
-        print(t);
-        float desiredT = t / patternSpeed * ballsInPattern / 3.0f;
-        print(desiredT);
-        float desiredS = Physics.gravity.y * Mathf.Pow(desiredT, 2f) / 2;
-        print("Wysokosc: " + desiredS);
-        yVector = Mathf.Abs((desiredS + (Physics.gravity.y / 2) * Mathf.Pow(desiredT, 2f)) / desiredT);
+      
+        yVector = basicVector.y / patternSpeed;
         print(yVector);
-        zVector = basicVector.z * t / desiredT;
+        zVector = basicVector.z * basicVector.y / yVector;
         print(zVector);
+        
+
     }
 
     private void SetPatternRotation()
@@ -102,6 +112,16 @@ public class PatternManager : MonoBehaviour
         rightSide.rotYSpeed = -basicRotYSpeed;
         rightSide.ROT_Z_TIME = basicROT_Z_TIME;
         rightSide.ROT_Y_TIME = basicROT_Y_TIME;
+
+        if(patternType == "Reverse Cascade")
+        {
+            correctCycle = 1.5f;
+            leftSide.rotZSpeed *= -1;
+            //leftSide.rotYSpeed *= -1;
+
+            rightSide.rotZSpeed *= -1;
+            //rightSide.rotYSpeed *= -1;
+        }
     }
 
     private void DistributeBalls()
@@ -119,13 +139,27 @@ public class PatternManager : MonoBehaviour
 
     private void SetUpPatternStats()
     {
+        leftHand.maxErrorX = maxErrorX;
+        leftHand.maxErrorY = maxErrorY;
+        rightHand.maxErrorX = maxErrorX;
+        rightHand.maxErrorY = maxErrorY;
+
         leftHand.properVector = basicVector;
         rightHand.properVector = new Vector3(basicVector.x, basicVector.y, -basicVector.z);
 
-        leftHand.initialDelay = basicInitialDelay;
-        rightHand.initialDelay = basicInitialDelay;
-        leftHand.patternTime = basicPatternTime;
-        rightHand.patternTime = basicPatternTime;
+        leftHand.initialDelay = basicHandTime * correctCycle + offset*2;
+        rightHand.initialDelay = basicHandTime * correctCycle + offset*2;
+
+        if(ballsInPattern % 2 == 1)
+        {
+            leftHand.patternTime = basicAirTime * 2 + offset;
+            rightHand.patternTime = basicAirTime * 2 + offset;
+        }
+        else
+        {
+            leftHand.patternTime = basicAirTime * 2f + offset;
+            rightHand.patternTime = basicAirTime * 2f + offset;
+        }
     }
 
     void Start()

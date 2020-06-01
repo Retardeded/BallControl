@@ -17,6 +17,9 @@ public class HandlingBall : MonoBehaviour
     [SerializeField] GameObject ball;
     Rigidbody ballRb;
     public Vector3 properVector;
+    public float maxErrorX;
+    public float maxErrorY;
+    public Vector3 catchPos;
     public Vector3 ballVelocity;
     public Vector3 previousPos;
     //1.819422 0.3812808 -0.1167499/0.3608411
@@ -37,6 +40,7 @@ public class HandlingBall : MonoBehaviour
         {
             ball = obj.gameObject;
             ballRb = ball.GetComponent<Rigidbody>();
+            catchPos = ball.transform.position;
             ball.transform.position = transform.position;
             handMode = true;
         }
@@ -74,7 +78,8 @@ public class HandlingBall : MonoBehaviour
     private void Relase()
     {
         float scale = ball.transform.position.y - basicPos.y;
-        ballRb.velocity = properVector;
+        Vector3 fixedVetor = new Vector3(properVector.x * (1 + Random.Range(-maxErrorX, maxErrorX)), properVector.y * (1 + Random.Range(-maxErrorY, maxErrorY)), properVector.z);
+        ballRb.velocity = fixedVetor;
 
         if (balls.Count - 1 > ballNum)
         {
