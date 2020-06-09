@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class RotationPattern : MonoBehaviour
 {
-
     [SerializeField] Transform yVec;
     [SerializeField] Transform zVec;
     [SerializeField] HandlingBall hand;
@@ -22,7 +21,6 @@ public class RotationPattern : MonoBehaviour
 
     public float yROT;
 
-    Rigidbody rb;
     Quaternion basicRotation;
 
     float PATTERN_TIME;
@@ -41,13 +39,14 @@ public class RotationPattern : MonoBehaviour
         PATTERN_TIME = ROT_Y_TIME * 2;
         patternTime = PATTERN_TIME;
         basicRotation = transform.rotation;
-        rb = GetComponent<Rigidbody>();
 
         zTime = ROT_Z_TIME/2;
         yTime = ROT_Y_TIME;
 
         if (leftSide)
+        {
             StartCoroutine(hand.BallRelease(hand.initialDelay));
+        }
         else
             StartCoroutine(SetUpTiming());
     }
@@ -57,35 +56,24 @@ public class RotationPattern : MonoBehaviour
     {
         Time.fixedDeltaTime = this.fixedDeltaTime * Time.timeScale;
 
-        yROT = rb.transform.eulerAngles.y;
         if (throwMode)
         {
-            PatternReset();
             TimeRotation();
+            // Cosinus sprawia, że zamiast jakiegoś równległobku/rombu rotacja zatacza elipsę/koło.
             yVec.Rotate(0f,rotYSpeed * Time.fixedDeltaTime * Mathf.Cos(yTime * PatternManager.COS_SCALE),0f);
             zVec.Rotate(0f, 0f, rotZSpeed * Time.fixedDeltaTime * Mathf.Cos(zTime * PatternManager.COS_SCALE));
             transform.rotation = Quaternion.Euler(0f, yVec.rotation.y*100, zVec.rotation.z*100);
+            // Obracanie jednocześnie wokół osi z i y powoduje zmianę w rotacji x, co psuje odpowiednie zapętlanie się rotacji, dlatego
+            // Trzeba osobno obracać jakiś obiekt wokoł osi y, inny wokół osi z i pożadana rotacja będzie po prostu sumą tych dwóch rotacji
         }
 
-    }
-
-    private void PatternReset()
-    {
-        patternTime -= Time.fixedDeltaTime;
-        if(patternTime < 0f)
-        {
-            patternTime = PATTERN_TIME;
-            //transform.rotation = Quaternion.Slerp(transform.rotation, basicRotation, Time.fixedDeltaTime * 5f);
-            if (transform.rotation == Quaternion.identity)
-                print("Reset");
-            transform.rotation = Quaternion.Euler(0, transform.rotation.y, transform.rotation.z);
-        }
     }
 
     private void TimeRotation()
     {
         zTime -= Time.fixedDeltaTime;
         yTime -= Time.fixedDeltaTime;
+        // co połowę okresu zmienamy znak danej rotacji na przeciwny
         if (yTime < 0f)
         {
             rotYSpeed *= -1;
@@ -105,4 +93,5 @@ public class RotationPattern : MonoBehaviour
         throwMode = true;
         StartCoroutine(hand.BallRelease(hand.initialDelay));
     }
+
 }

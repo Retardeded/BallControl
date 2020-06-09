@@ -4,25 +4,18 @@ using UnityEngine;
 
 public class HandlingBall : MonoBehaviour
 {
-    //3 ball
-    // properVector(y = 4.5, z = 0.75)
-    // initialDelay 1.8, patternTime 1.44
-    //
 
-    // properVector(y = 3.65, z = 0.9)
-    // initialDelay 1.33, patternTime 1.09
-    // (23) - patternCollapses
-
-    public List<GameObject> balls = new List<GameObject>();
+    public List<GameObject> myBalls = new List<GameObject>();
+    public List<GameObject> allBalls = new List<GameObject>();
+    public List<Rigidbody> allBallsRbs = new List<Rigidbody>();
     [SerializeField] GameObject ball;
     Rigidbody ballRb;
     public Vector3 properVector;
-    public float maxErrorX;
+    public float maxErrorZ;
     public float maxErrorY;
     public Vector3 catchPos;
     public Vector3 ballVelocity;
     public Vector3 previousPos;
-    //1.819422 0.3812808 -0.1167499/0.3608411
     public Vector3 basicPos;
     public float smallEnoughError = 0.1f;
 
@@ -39,7 +32,8 @@ public class HandlingBall : MonoBehaviour
         if (obj.gameObject != ball && obj.gameObject.tag == "Ball")
         {
             ball = obj.gameObject;
-            ballRb = ball.GetComponent<Rigidbody>();
+            int index = int.Parse(ball.name);
+            ballRb = allBallsRbs[index-1];
             catchPos = ball.transform.position;
             ball.transform.position = transform.position;
             handMode = true;
@@ -48,8 +42,13 @@ public class HandlingBall : MonoBehaviour
 
     void Start()
     {
-        numOfBalls = balls.Count;
-        ball = balls[ballNum];
+        for(int i = 0; i < allBalls.Count; i++)
+        {
+            allBallsRbs.Add(allBalls[i].GetComponent<Rigidbody>());
+        }
+
+        numOfBalls = myBalls.Count;
+        ball = myBalls[ballNum];
         ballRb = ball.GetComponent<Rigidbody>();
         ball.transform.position = transform.position;
     }
@@ -78,14 +77,18 @@ public class HandlingBall : MonoBehaviour
     private void Relase()
     {
         float scale = ball.transform.position.y - basicPos.y;
-        Vector3 fixedVetor = new Vector3(properVector.x * (1 + Random.Range(-maxErrorX, maxErrorX)), properVector.y * (1 + Random.Range(-maxErrorY, maxErrorY)), properVector.z);
+        // branie poprawki na nakładający się błąd numeryczny timingu
+        Vector3 fixedVetor = new Vector3(properVector.x, properVector.y * (1 + Random.Range(-maxErrorY, maxErrorY)), properVector.z * (1 + Random.Range(-maxErrorZ, maxErrorZ)));
+        // wyliczanie w wektor pewnego losowego procentowego błądu
         ballRb.velocity = fixedVetor;
 
-        if (balls.Count - 1 > ballNum)
+        if (myBalls.Count - 1 > ballNum)
         {
             ballNum++;
-            ball = balls[ballNum];
-            ballRb = ball.GetComponent<Rigidbody>();
+            ball = myBalls[ballNum];
+            int index = int.Parse(ball.name);
+            ballRb = allBallsRbs[index-1];
+            //ballRb = ball.GetComponent<Rigidbody>();
             print("Now: " + ball.name);
         }
         else
